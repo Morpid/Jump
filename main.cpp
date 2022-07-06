@@ -489,7 +489,7 @@ int main()
 }
 
 
-
+// Load texture
 unsigned int loadTexture(char const * path)
 {
     unsigned int textureID;
