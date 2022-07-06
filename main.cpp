@@ -34,7 +34,7 @@ bool firstMouse = true;
 
 float xWalk = 0.0f;
 float zWalk = 3.0f;
-float yWalk = 0.0f;
+float yWalk = 10.0f;
 
 // timing
 float deltaTime = 0.0f;
@@ -164,8 +164,13 @@ int main()
 
     glm::vec3 posWalk = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
     bool ismoving = true;
-    float Drag = 0.1f;
-    float Power = 2.7f;
+    /*float Drag = 0.1f;
+    float Power = 2.7f;*/
+
+    float yVelocity = 0.f;
+    float yGravity = -2.f;
+    float JumpInitVelocity = 2.7f;
+
     bool isjumping = false;
     bool onBlock = false;
     float TotalPower;
@@ -202,61 +207,28 @@ int main()
         {
             direction += glm::vec2(-1.0f, 0.0f);
             ismoving = true;
-            /*if(glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_A) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE)
-            {
-                LastWalkz = zWalk;
-                zWalk -= 0.89f * deltaTime;
-                ismoving = true;
-                //Rotate = -180.0f;
-                if(Rotate < -180.0f)
-                    Rotate += 15.0f;
-                if(Rotate > -180.0f)
-                    Rotate -= 15.0f;
-            }*/
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
             direction += glm::vec2(1.0f, 0.0f);
             ismoving = true;
-            /*if(glfwGetKey(window, GLFW_KEY_W) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_A) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE)
-            {
-                LastWalkz = zWalk;
-                zWalk += 0.69f * deltaTime;
-                ismoving = true;
-                //Rotate = 0.0f;
-                if(Rotate < 0.0f)
-                    Rotate += 15.0f;
-                if(Rotate > 0.0f)
-                    Rotate -= 15.0f;
-            }*/
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
             direction += glm::vec2(0.0f, -1.0f);
             ismoving = true;
-            /*if(glfwGetKey(window, GLFW_KEY_W) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_S) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE)
-            {
-                LastWalkx = xWalk;
-                xWalk -= 0.69f * deltaTime;
-                ismoving = true;
-                //Rotate = -90.0f;
-                if(Rotate < -90.0f)
-                    Rotate += 15.0f;
-                if(Rotate > -90.0f)
-                    Rotate -= 15.0f;
-            }*/
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
             direction += glm::vec2(0.0f, 1.0f);
             ismoving = true;            
-            
-            
         }
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         {
             isjumping = true;
+        } else {
+            isjumping = false;
         }
 
         if (glm::length(direction) > 0.0f) 
@@ -271,25 +243,45 @@ int main()
 
             // 3. Calculate the intended angle
             auto needed_rotation = glm::acos(glm::dot(direction, glm::vec2(1.0f, 0.0f)));
+            if (direction.y != 0.0f)
+                needed_rotation *= abs(direction.y) / direction.y;
             auto amount = 0.0f;
 
             //4. Rotate to intended angle
             if (Rotate > glm::degrees(needed_rotation))
-            {
                 amount -= 360.0f * deltaTime;
-                //std::cout << "dec-rotate | " << amount << " then ";
-                std::cout << glm::degrees(needed_rotation) << std::endl;
-            }
             if (Rotate < glm::degrees(needed_rotation))
-            {
                 amount += 360.0f * deltaTime;
-                //std::cout << "inc-rotate | " << amount << " then ";
-                std::cout << glm::degrees(needed_rotation) << std::endl;
-            }
+
             Rotate += amount;
-            std::cout << Rotate << " <> " << glm::degrees(needed_rotation) << std::endl;
+
+            // 5. NO VIBRATING!
+            if(amount > 0.0f && Rotate > glm::degrees(needed_rotation))
+                Rotate = glm::degrees(needed_rotation);
+
+            if(amount < 0.0f && Rotate < glm::degrees(needed_rotation))
+                Rotate = glm::degrees(needed_rotation);
+
         }
 
+        // Check if now jumping?
+        if (isjumping)
+            yVelocity = JumpInitVelocity;
+
+        // Apply gravity with Euler integration
+        yVelocity += yGravity * deltaTime;
+        
+        // Check if on surface
+        if (yWalk < 0.0f)
+            yVelocity = 0.0f;
+
+        yWalk += yVelocity * deltaTime;
+
+        std::cout << "velocity: " << yVelocity << ", yPos: " << yWalk << std::endl;
+
+        // If below ground, go back to ground level
+        if(yWalk < 0.0f)
+            yWalk = 0.0f;
 
         if(ismoving)
             animator.UpdateAnimation(deltaTime);
@@ -318,37 +310,27 @@ int main()
         model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
         model = glm::rotate(model, glm::radians(Rotate), glm::vec3(0.0f, 1.0f, 0.0f));
         onBlock = false;
-        if(yWalk >= 0.9f && yWalk < 1.0f)
+        if(yWalk == 1.0f)
         {	
             if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= -0.7f && xWalk <= 0.7f)
             {
-                yWalk = 1.0f;
                 onBlock = true;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
             }
             if(zWalk >= 0.3f && zWalk <= 1.7f && xWalk >= 0.3f && xWalk <= 1.7f)
             {
-                yWalk = 1.0f;
                 onBlock = true;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
             }
             if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= 0.3f && xWalk <= 1.7f)
             {
-                yWalk = 1.0f;
                 onBlock = true;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
             }
             if(zWalk >= 0.3f && zWalk <= 1.7f && xWalk >= -0.7f && xWalk <= 0.7f)
             {
-                yWalk = 1.0f;
                 onBlock = true;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
             }
             if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= -1.7f && xWalk <= -0.7f)
             {
-                yWalk = 1.0f;
                 onBlock = true;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
             }
         }
 
@@ -387,7 +369,7 @@ int main()
         }
        
 
-        if (isjumping)
+        /*if (isjumping)
         {
             if(onBlock)
             {
@@ -418,7 +400,7 @@ int main()
                 isjumping = false;
                 Drag = 0.1;
             }
-        }
+        }*/
 
         shaderAnim.setMat4("model", model);
         Man.Draw(shaderAnim);
