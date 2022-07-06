@@ -168,8 +168,9 @@ int main()
     float Power = 2.7f;*/
 
     float yVelocity = 0.f;
-    float yGravity = -2.f;
+    float yGravity = -3.f;
     float JumpInitVelocity = 2.7f;
+    int jumpLength = 0;
 
     bool isjumping = false;
     bool onBlock = false;
@@ -227,8 +228,10 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
         {
             isjumping = true;
+            jumpLength++;
         } else {
             isjumping = false;
+            jumpLength = 0;
         }
 
         if (glm::length(direction) > 0.0f) 
@@ -264,8 +267,11 @@ int main()
 
         }
 
+        if(jumpLength > 10)
+            isjumping = false;
+
         // Check if now jumping?
-        if (isjumping)
+        if (isjumping && yWalk <= 0.0f)
             yVelocity = JumpInitVelocity;
 
         // Apply gravity with Euler integration
