@@ -40,6 +40,9 @@ float yWalk = 10.0f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// collision
+bool withinBoxBounds = false;
+
 int main()
 {
     // glfw: initialize and configure
@@ -86,6 +89,8 @@ int main()
     ModelAnim Man("models/Man/Mr_Man_Walking.fbx", true);
     Animation ManAnimation("models/Man/Mr_Man_Walking.fbx", &Man);
     Animator animator(&ManAnimation);
+    std::string PlaneType = "texture_diffuse";
+    Mesh PlaneMesh(PlaneVertices, PlaneIndices, std::vector<Texture> {});
 
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -126,7 +131,7 @@ int main()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertices), CubeVertices, GL_STATIC_DRAW);
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -204,6 +209,7 @@ int main()
         ismoving = false;
         glm::vec2 direction(0.0f, 0.0f);
 
+        // Step 1. Process input
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
             direction += glm::vec2(-1.0f, 0.0f);
@@ -234,6 +240,7 @@ int main()
             jumpLength = 0;
         }
 
+        // Step 2. Figure out rotation of model
         if (glm::length(direction) > 0.0f) 
         {
 
@@ -267,27 +274,76 @@ int main()
 
         }
 
+        // Step 3. Sort out jumping
         if(jumpLength > 10)
             isjumping = false;
 
         // Check if now jumping?
-        if (isjumping && yWalk <= 0.0f)
+        if (isjumping)
             yVelocity = JumpInitVelocity;
 
         // Apply gravity with Euler integration
         yVelocity += yGravity * deltaTime;
         
         // Check if on surface
-        if (yWalk < 0.0f)
-            yVelocity = 0.0f;
+        // Check if in the bounds of the box
+        // If yes, then make sure yWalk is at least 1.0
+        // If not, then make sure yWalk is at least 0.0
+
+        withinBoxBounds = false;
+        if(zWalk >= -0.5f && zWalk <= 0.5f && xWalk >= -0.5f && xWalk <= 0.5f)
+        {
+            withinBoxBounds = true;
+        }
+        if(zWalk >= 0.5f && zWalk <= 1.5f && xWalk >= 0.5f && xWalk <= 1.5f)
+        {
+            withinBoxBounds = true;
+        }
+        if(zWalk >= -0.5f && zWalk <= 0.5f && xWalk >= 0.5f && xWalk <= 1.5f)
+        {
+            withinBoxBounds = true;
+        }
+        if(zWalk >= 0.5f && zWalk <= 1.5f && xWalk >= -0.5f && xWalk <= 0.5f)
+        {
+            withinBoxBounds = true;
+        }
+        if(zWalk >= -0.5f && zWalk <= 0.5f && xWalk >= -1.5f && xWalk <= -0.5f)
+        {
+            withinBoxBounds = true;
+        }
+
+        // Check for collision
+        if (yWalk < 1.0f) {
+            if (withinBoxBounds) {
+                xWalk = LastWalkx;
+                zWalk = LastWalkz;
+                withinBoxBounds = false;
+                std::cout << "Collision!!" << std::endl;
+                std::cout << "Cqf!!" << std::endl;
+            }
+        }
+
+        // Check floor height
+        if (withinBoxBounds) {
+            std::cout << "Within Box Bounds, y" << std::endl;
+            if (yWalk <= 1.05f && !isjumping) {
+                yVelocity = 0.0f;
+                yWalk = 1.0f;
+            }
+        } else {
+            if (yWalk < 0.0f) {
+                yVelocity = 0.0f;    
+                yWalk = 0.0f;
+            }
+        }
 
         yWalk += yVelocity * deltaTime;
 
-        std::cout << "velocity: " << yVelocity << ", yPos: " << yWalk << std::endl;
+        // Step 4. Constrain position based on physics and collisions
 
         // If below ground, go back to ground level
-        if(yWalk < 0.0f)
-            yWalk = 0.0f;
+        //if(yWalk < 0.0f)
+        //    yWalk = 0.0f;
 
         if(ismoving)
             animator.UpdateAnimation(deltaTime);
@@ -316,97 +372,8 @@ int main()
         model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
         model = glm::rotate(model, glm::radians(Rotate), glm::vec3(0.0f, 1.0f, 0.0f));
         onBlock = false;
-        if(yWalk == 1.0f)
-        {	
-            if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= -0.7f && xWalk <= 0.7f)
-            {
-                onBlock = true;
-            }
-            if(zWalk >= 0.3f && zWalk <= 1.7f && xWalk >= 0.3f && xWalk <= 1.7f)
-            {
-                onBlock = true;
-            }
-            if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= 0.3f && xWalk <= 1.7f)
-            {
-                onBlock = true;
-            }
-            if(zWalk >= 0.3f && zWalk <= 1.7f && xWalk >= -0.7f && xWalk <= 0.7f)
-            {
-                onBlock = true;
-            }
-            if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= -1.7f && xWalk <= -0.7f)
-            {
-                onBlock = true;
-            }
-        }
-
-        if(yWalk < 1.0f)
-        {
-            if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= -0.7f && xWalk <= 0.7f)
-            {
-                xWalk = LastWalkx;
-                zWalk = LastWalkz;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
-            }
-            if(zWalk >= 0.3f && zWalk <= 1.7f && xWalk >= 0.3f && xWalk <= 1.7f)
-            {
-                xWalk = LastWalkx;
-                zWalk = LastWalkz;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
-            }
-            if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= 0.3f && xWalk <= 1.7f)
-            {
-                xWalk = LastWalkx;
-                zWalk = LastWalkz;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
-            }
-            if(zWalk >= 0.3f && zWalk <= 1.7f && xWalk >= -0.7f && xWalk <= 0.7f)
-            {
-                xWalk = LastWalkx;
-                zWalk = LastWalkz;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
-            }
-            if(zWalk >= -0.7f && zWalk <= 0.7f && xWalk >= -1.7f && xWalk <= -0.7f)
-            {
-                xWalk = LastWalkx;
-                zWalk = LastWalkz;
-                model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
-            }
-        }
        
-
-        /*if (isjumping)
-        {
-            if(onBlock)
-            {
-                Drag = 0.1f;
-            }
-            TotalPower = Power - Drag;
-            yWalk += TotalPower * deltaTime;
-            LastWalky = yWalk;
-            if(Drag < 2.7f)
-                Drag = Drag * 1.1;
-            if(Drag >= 2.7f)
-                Drag = Drag * 1.05;
-            if(Drag > 5.0f)
-                Drag = 5.0f;
-
-            if(yWalk <= 0.0f)
-            {
-                LastWalky = yWalk;
-                yWalk = 0.0f;
-                isjumping = false;
-                Drag = 0.1;
-            }
-
-            if(yWalk > 0.95f && yWalk < 1.05 && onBlock == true)
-            {
-                LastWalky = yWalk;
-                yWalk = 1.0f;
-                isjumping = false;
-                Drag = 0.1;
-            }
-        }*/
+        model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk));
 
         shaderAnim.setMat4("model", model);
         Man.Draw(shaderAnim);
@@ -468,6 +435,10 @@ int main()
         // render box
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // render plane
+        model = glm::mat4(1.0f);
+        PlaneMesh.Draw(cubeShader);
 
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
