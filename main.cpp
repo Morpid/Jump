@@ -3,10 +3,12 @@
 
 #include "main.hpp"
 
+// glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// Model classes
 #include "Shader.h" 
 #include "Camera.h" 
 #include "ModelAnim.h" 
@@ -19,6 +21,7 @@
 void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+//texture load
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(std::vector<std::string> faces);
 
@@ -32,6 +35,7 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
+// Character cords
 float xWalk = 0.0f;
 float zWalk = 3.0f;
 float yWalk = 10.0f;
@@ -81,6 +85,7 @@ int main()
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    // Shader + Objs
     Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
     Shader shaderAnim("shaders/shaderAnim.vs", "shaders/shader.fs");
     Shader shader("shaders/shader.vs", "shaders/shader.fs");
@@ -102,6 +107,7 @@ int main()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
+    // skybox textures
     std::vector<std::string> faces {
         "cubemap/right.jpg",
         "cubemap/left.jpg",
@@ -109,17 +115,12 @@ int main()
         "cubemap/bottom.jpg",
         "cubemap/front.jpg",
         "cubemap/back.jpg"
-
-        //"cubemap/BLUE.jpeg",
-        //"cubemap/BLUE.jpeg",
-        //"cubemap/BLUE.jpeg",
-        //"cubemap/BLUE.jpeg",
-        //"cubemap/BLUE.jpeg",
-        //"cubemap/BLUE.jpeg"
     };
 
+    //load cube tex
     const char * Path = "container.jpeg";
 
+    // load cubemap tex
     stbi_set_flip_vertically_on_load(false);
     unsigned int cubemapTexture = loadCubemap(faces);
     stbi_set_flip_vertically_on_load(true);
@@ -140,7 +141,7 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-
+    //cube tex
     unsigned int texture1;
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
@@ -169,9 +170,8 @@ int main()
 
     glm::vec3 posWalk = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
     bool ismoving = true;
-    /*float Drag = 0.1f;
-    float Power = 2.7f;*/
 
+    // jumping variables
     float yVelocity = 0.f;
     float yGravity = -3.f;
     float JumpInitVelocity = 2.7f;
@@ -185,6 +185,7 @@ int main()
     animator.UpdateAnimation(0.0f);
     float Rotate = 180.0f;
 
+    // Col detection
     float LastWalkx;
     float LastWalky;
     float LastWalkz;
@@ -342,8 +343,6 @@ int main()
         // Step 4. Constrain position based on physics and collisions
 
         // If below ground, go back to ground level
-        //if(yWalk < 0.0f)
-        //    yWalk = 0.0f;
 
         if(ismoving)
             animator.UpdateAnimation(deltaTime);
