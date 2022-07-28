@@ -15,37 +15,24 @@
 #include "Model.h"
 #include "animator.h"
 
+// iostream
 #include <iostream>
 #include <vector>
 
-void processInput(GLFWwindow *window);
+// window
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
 //texture load
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(std::vector<std::string> faces);
+unsigned int loadCubeTexture(const char *path);
 
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+// Draw cube
+void DrawCube(glm::mat4 model, glm::vec3 cords, Shader shader, unsigned int VAO);
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
-
-// Character cords
-float xWalk = 0.0f;
-float zWalk = 3.0f;
-float yWalk = 10.0f;
-
-// timing
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
-
-// collision
-bool withinBoxBounds = false;
 
 int main()
 {
@@ -117,21 +104,18 @@ int main()
         "cubemap/back.jpg"
     };
 
-    //load cube tex
-    const char * Path = "container.jpeg";
-
     // load cubemap tex
     stbi_set_flip_vertically_on_load(false);
     unsigned int cubemapTexture = loadCubemap(faces);
     stbi_set_flip_vertically_on_load(true);
 
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    unsigned int cubeVBO, cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
 
-    glBindVertexArray(VAO);
+    glBindVertexArray(cubeVAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertices), CubeVertices, GL_STATIC_DRAW);
 
     // position attribute
@@ -141,26 +125,8 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    //cube tex
-    unsigned int texture1;
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
-    unsigned char *data = stbi_load(Path, &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
+    unsigned int CubeTex0 = loadCubeTexture("CubeTexs/container.jpeg");
+    
 
     cubeShader.use();
     cubeShader.setInt("texture1", 0);
@@ -168,27 +134,7 @@ int main()
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
-    glm::vec3 posWalk = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
-    bool ismoving = true;
-
-    // jumping variables
-    float yVelocity = 0.f;
-    float yGravity = -3.f;
-    float JumpInitVelocity = 2.7f;
-    int jumpLength = 0;
-
-    bool isjumping = false;
-    bool onBlock = false;
-    float TotalPower;
-
-
     animator.UpdateAnimation(0.0f);
-    float Rotate = 180.0f;
-
-    // Col detection
-    float LastWalkx;
-    float LastWalky;
-    float LastWalkz;
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -199,150 +145,21 @@ int main()
         lastFrame = currentFrame;
 
         // input
-        //processInput(window);
-        posWalk = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
-        camera.ProcessKeyboardFollow(FOLLOW, deltaTime, posWalk);
+        CameraCords = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
+        camera.ProcessKeyboardFollow(FOLLOW, deltaTime, CameraCords);
 
         LastWalkx = xWalk;
         LastWalky = yWalk;
         LastWalkz = zWalk;
 
         ismoving = false;
+
         glm::vec2 direction(0.0f, 0.0f);
+        direction = ProcessInput(window, direction);
 
-        // Step 1. Process input
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            direction += glm::vec2(-1.0f, 0.0f);
-            ismoving = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            direction += glm::vec2(1.0f, 0.0f);
-            ismoving = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            direction += glm::vec2(0.0f, -1.0f);
-            ismoving = true;
-        }
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            direction += glm::vec2(0.0f, 1.0f);
-            ismoving = true;            
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        {
-            isjumping = true;
-            jumpLength++;
-        } else {
-            isjumping = false;
-            jumpLength = 0;
-        }
-
-        // Step 2. Figure out rotation of model
-        if (glm::length(direction) > 0.0f) 
-        {
-
-            // 1. Normalize to length 1.0
-            direction = glm::normalize(direction);
-
-            // 2. Calculate the movement
-            zWalk += direction.x * 0.69f * deltaTime;
-            xWalk += direction.y * 0.69f * deltaTime;
-
-            // 3. Calculate the intended angle
-            auto needed_rotation = glm::acos(glm::dot(direction, glm::vec2(1.0f, 0.0f)));
-            if (direction.y != 0.0f)
-                needed_rotation *= abs(direction.y) / direction.y;
-            auto amount = 0.0f;
-
-            //4. Rotate to intended angle
-            if (Rotate > glm::degrees(needed_rotation))
-                amount -= 360.0f * deltaTime;
-            if (Rotate < glm::degrees(needed_rotation))
-                amount += 360.0f * deltaTime;
-
-            Rotate += amount;
-
-            // 5. NO VIBRATING!
-            if(amount > 0.0f && Rotate > glm::degrees(needed_rotation))
-                Rotate = glm::degrees(needed_rotation);
-
-            if(amount < 0.0f && Rotate < glm::degrees(needed_rotation))
-                Rotate = glm::degrees(needed_rotation);
-
-        }
-
-        // Step 3. Sort out jumping
-        if(jumpLength > 10)
-            isjumping = false;
-
-        // Check if now jumping?
-        if (isjumping)
-            yVelocity = JumpInitVelocity;
-
-        // Apply gravity with Euler integration
-        yVelocity += yGravity * deltaTime;
-        
-        // Check if on surface
-        // Check if in the bounds of the box
-        // If yes, then make sure yWalk is at least 1.0
-        // If not, then make sure yWalk is at least 0.0
-
-        withinBoxBounds = false;
-        if(zWalk >= -0.5f && zWalk <= 0.5f && xWalk >= -0.5f && xWalk <= 0.5f)
-        {
-            withinBoxBounds = true;
-        }
-        if(zWalk >= 0.5f && zWalk <= 1.5f && xWalk >= 0.5f && xWalk <= 1.5f)
-        {
-            withinBoxBounds = true;
-        }
-        if(zWalk >= -0.5f && zWalk <= 0.5f && xWalk >= 0.5f && xWalk <= 1.5f)
-        {
-            withinBoxBounds = true;
-        }
-        if(zWalk >= 0.5f && zWalk <= 1.5f && xWalk >= -0.5f && xWalk <= 0.5f)
-        {
-            withinBoxBounds = true;
-        }
-        if(zWalk >= -0.5f && zWalk <= 0.5f && xWalk >= -1.5f && xWalk <= -0.5f)
-        {
-            withinBoxBounds = true;
-        }
-
-        // Check for collision
-        if (yWalk < 1.0f) {
-            if (withinBoxBounds) {
-                xWalk = LastWalkx;
-                zWalk = LastWalkz;
-                withinBoxBounds = false;
-                std::cout << "Collision!!" << std::endl;
-                std::cout << "Cqf!!" << std::endl;
-            }
-        }
-
-        // Check floor height
-        if (withinBoxBounds) {
-            std::cout << "Within Box Bounds, y" << std::endl;
-            if (yWalk <= 1.05f && !isjumping) {
-                yVelocity = 0.0f;
-                yWalk = 1.0f;
-            }
-        } else {
-            if (yWalk < 0.0f) {
-                yVelocity = 0.0f;    
-                yWalk = 0.0f;
-            }
-        }
-
-        yWalk += yVelocity * deltaTime;
-
-        // Step 4. Constrain position based on physics and collisions
-
-        // If below ground, go back to ground level
+        CheckRotation(direction);
+        CheckJumping();
+        CheckCollision(deltaTime);
 
         if(ismoving)
             animator.UpdateAnimation(deltaTime);
@@ -370,7 +187,6 @@ int main()
         model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk)); 
         model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
         model = glm::rotate(model, glm::radians(Rotate), glm::vec3(0.0f, 1.0f, 0.0f));
-        onBlock = false;
        
         model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk));
 
@@ -390,50 +206,16 @@ int main()
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
+        glBindTexture(GL_TEXTURE_2D, CubeTex0);
 
         cubeShader.use();
 
-        model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        model         = glm::translate(model, glm::vec3(0.0f, 0.6f, 0.0f)); 
-        cubeShader.setMat4("model", model);
-
-        // render box
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-        model         = glm::mat4(1.0f);
-        model         = glm::translate(model, glm::vec3(1.0f, 0.6f, 1.0f)); 
-        cubeShader.setMat4("model", model);
-
-        // render box
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        model         = glm::mat4(1.0f);
-        model         = glm::translate(model, glm::vec3(1.0f, 0.6f, 0.0f)); 
-        cubeShader.setMat4("model", model);
-
-        // render box
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        model         = glm::mat4(1.0f);
-        model         = glm::translate(model, glm::vec3(0.0f, 0.6f, 1.0f)); 
-        cubeShader.setMat4("model", model);
-
-        // render box
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        model         = glm::mat4(1.0f);
-        model         = glm::translate(model, glm::vec3(-1.0f, 0.6f, 0.0f)); 
-        cubeShader.setMat4("model", model);
-
-        // render box
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        DrawCube(model, glm::vec3(1.35f, 1.6f, 0.0f), cubeShader, cubeVAO);
+        DrawCube(model, glm::vec3(0.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
+        DrawCube(model, glm::vec3(1.0f, 0.6f, 1.0f), cubeShader, cubeVAO);
+        DrawCube(model, glm::vec3(1.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
+        DrawCube(model, glm::vec3(-1.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
+        DrawCube(model, glm::vec3(0.0f, 0.6f, 1.0f), cubeShader, cubeVAO);
 
         // render plane
         model = glm::mat4(1.0f);
@@ -463,7 +245,6 @@ int main()
     glfwTerminate();
     return 0;
 }
-
 
 // Load texture
 unsigned int loadTexture(char const * path)
@@ -547,20 +328,6 @@ unsigned int loadCubemap(std::vector<std::string> faces)
 
     return textureID;
 }
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        zWalk -= 0.07f;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        zWalk += 0.07f;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        xWalk -= 0.07f;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        xWalk += 0.07f;
-}
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
@@ -577,4 +344,38 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastY = ypos;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
+}
+unsigned int loadCubeTexture(const char *path)
+{
+    //cube tex
+    unsigned int Texture;
+    glGenTextures(1, &Texture);
+    glBindTexture(GL_TEXTURE_2D, Texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+    unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    return Texture;
+}
+void DrawCube(glm::mat4 model, glm::vec3 cords, Shader shader, unsigned int VAO)
+{
+    model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    model         = glm::translate(model, cords); 
+    shader.setMat4("model", model);
+
+    // render box
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 }
