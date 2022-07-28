@@ -1,6 +1,8 @@
+// glad and glfw
 #include "glad/glad.h"
 #include <glfw/glfw3.h>
 
+// functions, variables and vectors
 #include "main.hpp"
 
 // glm
@@ -34,6 +36,7 @@ void DrawCube(glm::mat4 model, glm::vec3 cords, Shader shader, unsigned int VAO)
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
+// main function
 int main()
 {
     // glfw: initialize and configure
@@ -109,6 +112,7 @@ int main()
     unsigned int cubemapTexture = loadCubemap(faces);
     stbi_set_flip_vertically_on_load(true);
 
+    // VAO + VBO for cube
     unsigned int cubeVBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
@@ -125,15 +129,17 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    // cube tex
     unsigned int CubeTex0 = loadCubeTexture("CubeTexs/container.jpeg");
     
-
+    // set int (shaders)
     cubeShader.use();
     cubeShader.setInt("texture1", 0);
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
+    // Update anim
     animator.UpdateAnimation(0.0f);
 
     // render loop
@@ -148,19 +154,24 @@ int main()
         CameraCords = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
         camera.ProcessKeyboardFollow(FOLLOW, deltaTime, CameraCords);
 
+        // Collision detection cords
         LastWalkx = xWalk;
         LastWalky = yWalk;
         LastWalkz = zWalk;
 
+        // should character walk?
         ismoving = false;
 
+        // process Input for movement
         glm::vec2 direction(0.0f, 0.0f);
         direction = ProcessInput(window, direction);
 
+        // Check if Jumped / Needs to rotate? / Is at wall?
         CheckRotation(direction);
         CheckJumping();
         CheckCollision(deltaTime);
 
+        // sould do walk anim?
         if(ismoving)
             animator.UpdateAnimation(deltaTime);
 
@@ -171,12 +182,14 @@ int main()
 
         shaderAnim.use();
 
+        // view and projection
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 
             (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         shaderAnim.setMat4("projection", projection);
         shaderAnim.setMat4("view", view);
 
+        // Animator + bones
         auto transforms = animator.GetFinalBoneMatrices();
         for (int i = 0; i < transforms.size(); i++)
             shaderAnim.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
@@ -210,6 +223,7 @@ int main()
 
         cubeShader.use();
 
+        // Draw cube enviroment
         DrawCube(model, glm::vec3(1.35f, 1.6f, 0.0f), cubeShader, cubeVAO);
         DrawCube(model, glm::vec3(0.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
         DrawCube(model, glm::vec3(1.0f, 0.6f, 1.0f), cubeShader, cubeVAO);
