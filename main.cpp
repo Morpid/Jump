@@ -81,6 +81,7 @@ int main()
     Shader shader("shaders/shader.vs", "shaders/shader.fs");
     Shader cubeShader("shaders/cube.vs", "shaders/cube.fs");
     stbi_set_flip_vertically_on_load(true);
+    Model Tree("models/Tree2/tree01.obj");
     ModelAnim Man("models/Man/Mr_Man_Walking.fbx", true);
     Animation ManAnimation("models/Man/Mr_Man_Walking.fbx", &Man);
     Animator animator(&ManAnimation);
@@ -149,8 +150,8 @@ int main()
     glEnableVertexAttribArray(1);
 
     // cube tex
-    unsigned int CubeTex0 = loadCubeTexture("CubeTexs/container.jpeg");
-    unsigned int PlaneTex0 = loadCubeTexture("PlaneTex.jpeg");
+    unsigned int CubeTex0 = loadCubeTexture("PlaneTex.jpeg");
+    unsigned int PlaneTex0 = loadCubeTexture("CubeTexs/CubeTexture.jpeg");
     
     // set int (shaders)
     cubeShader.use();
@@ -224,10 +225,24 @@ int main()
         model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
         model = glm::rotate(model, glm::radians(Rotate), glm::vec3(0.0f, 1.0f, 0.0f));
        
-        model = glm::translate(model, glm::vec3(xWalk, yWalk, zWalk));
-
         shaderAnim.setMat4("model", model);
         Man.Draw(shaderAnim);
+
+        shader.use();
+
+        // view and projection
+        projection = glm::perspective(glm::radians(camera.Zoom), 
+            (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
+        view = camera.GetViewMatrix();
+        shader.setMat4("projection", projection);
+        shader.setMat4("view", view);
+
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        model = glm::translate(model, glm::vec3(8.0f, 0.0f, 5.0f)); 
+
+        shader.setMat4("model", model);
+        Tree.Draw(shader);
 
         cubeShader.use();
 
