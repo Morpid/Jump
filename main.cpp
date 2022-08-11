@@ -1,3 +1,4 @@
+//Include:
 // glad and glfw
 #include "glad/glad.h"
 #include <glfw/glfw3.h>
@@ -87,6 +88,7 @@ int main()
     Animator animator(&ManAnimation);
     std::string PlaneType = "texture_diffuse";
 
+    // Plane VBO, VAO, EBO
     unsigned int planeVBO, planeVAO, planeEBO;
     glGenVertexArrays(1, &planeVAO);
     glGenBuffers(1, &planeVBO);
@@ -238,8 +240,8 @@ int main()
         shader.setMat4("view", view);
 
         model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-        model = glm::translate(model, glm::vec3(8.0f, 0.0f, 5.0f)); 
+        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+        model = glm::translate(model, glm::vec3(10.0f, 0.0f, 9.0f)); 
 
         shader.setMat4("model", model);
         Tree.Draw(shader);
