@@ -1,15 +1,22 @@
 //Include:
+
+
 // glad and glfw
 #include "glad/glad.h"
 #include <glfw/glfw3.h>
 
+
 // functions, variables and vectors
 #include "main.hpp"
+
 
 // glm
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/ext.hpp>
+#include <glm/gtx/transform.hpp>
+
 
 // Model classes
 #include "Shader.h" 
@@ -18,63 +25,84 @@
 #include "Model.h"
 #include "animator.h"
 
+
+#include <cmath>
+
+
 // iostream
 #include <iostream>
 #include <vector>
 
+
 // window
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
 
 //texture load
 unsigned int loadTexture(const char *path);
 unsigned int loadCubemap(std::vector<std::string> faces);
 unsigned int loadCubeTexture(const char *path);
 
+
 // Draw cube
 void DrawCube(glm::mat4 model, glm::vec3 cords, Shader shader, unsigned int VAO);
+
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 
+
 // main function
 int main()
 {
+
     // glfw: initialize and configure
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
+
 
     // glfw window creation
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "", NULL, NULL);
     if (window == NULL)
     {
+
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
+
     }
+
 
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
 
+
     // glad: load all OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
+
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
+
     }
+
 
     // configure global opengl state
     glEnable(GL_DEPTH_TEST);
 
+
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 
     // Shader + Objs
     Shader skyboxShader("shaders/skybox.vs", "shaders/skybox.fs");
@@ -82,11 +110,45 @@ int main()
     Shader shader("shaders/shader.vs", "shaders/shader.fs");
     Shader cubeShader("shaders/cube.vs", "shaders/cube.fs");
     stbi_set_flip_vertically_on_load(true);
-    Model Tree("models/Tree2/tree01.obj");
+    //Model Tree("models/Tree2/tree01.obj");
     ModelAnim Man("models/Man/Mr_Man_Walking.fbx", true);
     Animation ManAnimation("models/Man/Mr_Man_Walking.fbx", &Man);
     Animator animator(&ManAnimation);
     std::string PlaneType = "texture_diffuse";
+
+
+    Cube Cube11;
+    Cube Cube12;
+    Cube Cube13;
+    Cube Cube14;
+    Cube Cube15;
+    Cube Cube21;
+    
+
+    Cube11.cords = glm::vec3(0.0f, 0.6f, 0.0f);
+    Cube12.cords = glm::vec3(1.0f, 0.6f, 1.0f);
+    Cube13.cords = glm::vec3(1.0f, 0.6f, 0.0f);
+    Cube14.cords = glm::vec3(-1.0f, 0.6f, 0.0f);
+    Cube15.cords = glm::vec3(0.0f, 0.6f, 1.0f);
+    Cube21.cords = glm::vec3(1.35f, 1.6f, 0.0f);
+
+
+    Cube11.Width = 1.0f;
+    Cube12.Width = 1.0f;
+    Cube13.Width = 1.0f;
+    Cube14.Width = 1.0f;
+    Cube15.Width = 1.0f;
+    Cube21.Width = 1.0f;
+
+    Cube11.Level = 1;
+    Cube12.Level = 1;
+    Cube13.Level = 1;
+    Cube14.Level = 1;
+    Cube15.Level = 1;
+    Cube21.Level = 2;
+
+
+
 
     // Plane VBO, VAO, EBO
     unsigned int planeVBO, planeVAO, planeEBO;
@@ -94,20 +156,27 @@ int main()
     glGenBuffers(1, &planeVBO);
     glGenBuffers(1, &planeEBO);
 
+
     glBindVertexArray(planeVAO);
+
 
     glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(PlaneVertices), PlaneVertices, GL_STATIC_DRAW);
 
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, planeEBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(PlaneIndices), PlaneIndices, GL_STATIC_DRAW);
+
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+
     // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
 
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
@@ -119,6 +188,7 @@ int main()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
+
     // skybox textures
     std::vector<std::string> faces {
         "cubemap/right.jpg",
@@ -129,20 +199,25 @@ int main()
         "cubemap/back.jpg"
     };
 
+
     // load cubemap tex
     stbi_set_flip_vertically_on_load(false);
     unsigned int cubemapTexture = loadCubemap(faces);
     stbi_set_flip_vertically_on_load(true);
+
 
     // VAO + VBO for cube
     unsigned int cubeVBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
     glGenBuffers(1, &cubeVBO);
 
+
     glBindVertexArray(cubeVAO);
+
 
     glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertices), CubeVertices, GL_STATIC_DRAW);
+
 
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -151,55 +226,138 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+
     // cube tex
-    unsigned int CubeTex0 = loadCubeTexture("PlaneTex.jpeg");
-    unsigned int PlaneTex0 = loadCubeTexture("CubeTexs/CubeTexture.jpeg");
+    unsigned int CubeTex0 = loadCubeTexture("CubeTexs/container.jpeg");
+    unsigned int PlaneTex0 = loadCubeTexture("CubeTexs/PlaneTex.jpeg");
     
+
     // set int (shaders)
     cubeShader.use();
     cubeShader.setInt("texture1", 0);
 
+
     cubeShader.use();
     cubeShader.setInt("texture2", 0);
+
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
+
     // Update anim
     animator.UpdateAnimation(0.0f);
+
 
     // render loop
     while (!glfwWindowShouldClose(window))
     {
+
         // per-frame time logic
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
+
         // input
         CameraCords = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
         camera.ProcessKeyboardFollow(FOLLOW, deltaTime, CameraCords);
+
 
         // Collision detection cords
         LastWalkx = xWalk;
         LastWalky = yWalk;
         LastWalkz = zWalk;
 
+
         // should character walk?
         ismoving = false;
+
 
         // process Input for movement
         glm::vec2 direction(0.0f, 0.0f);
         direction = ProcessInput(window, direction);
 
+
         // Check if Jumped / Needs to rotate? / Is at wall?
-        CheckRotation(direction);
-        CheckJumping();
-        CheckCollision(deltaTime);
+        CharRotation(direction);
+
+        //Sort out jumping
+        if(jumpLength > 10)
+            isjumping = false;
+        // Check if now jumping?
+        if (isjumping)
+        {
+            yVelocity = JumpInitVelocity;
+        }
+        // Apply gravity with Euler integration
+        yVelocity += yGravity * deltaTime;
+
+    within1stLevelBoxBounds = false;
+    within2ndLevelBoxBounds = false;
+
+    Cube11.CheckCollisionXZ(xWalk, yWalk, zWalk);
+    Cube12.CheckCollisionXZ(xWalk, yWalk, zWalk);
+    Cube13.CheckCollisionXZ(xWalk, yWalk, zWalk);
+    Cube14.CheckCollisionXZ(xWalk, yWalk, zWalk);
+    Cube15.CheckCollisionXZ(xWalk, yWalk, zWalk);
+    Cube21.CheckCollisionXZ(xWalk, yWalk, zWalk);
+
+    /*if (Cube11.XZCol == true || Cube12.XZCol == true || Cube13.XZCol == true || Cube14.XZCol == true || Cube15.XZCol == true)
+        within1stLevelBoxBounds = true;
+    if(Cube21.XZCol == true)
+        within2ndLevelBoxBounds = true;
+
+    // Check for collision
+    if (yWalk < 1.0f) {
+        if (within1stLevelBoxBounds) {
+            xWalk = LastWalkx;
+            zWalk = LastWalkz;
+            within1stLevelBoxBounds = false;
+        }
+    }
+    if (yWalk > 0.97f && yWalk < 2.0f && within2ndLevelBoxBounds)
+    {
+        xWalk = LastWalkx;
+        zWalk = LastWalkz;
+        within2ndLevelBoxBounds = false;
+    }
+    if (within2ndLevelBoxBounds) {
+        if (yWalk <= 2.07f && yWalk > 1.0f && !isjumping) {
+            yVelocity = 0.0f;
+            AlreadyJumped = false;
+            yWalk = 2.0f;
+        }
+    } else {
+        if (yWalk < 0.0f) {
+            yVelocity = 0.0f;
+            AlreadyJumped = false;    
+            yWalk = 0.0f;
+        }
+    }
+    
+    // Check floor height
+    if (within1stLevelBoxBounds) {
+        if (yWalk <= 1.07f && !isjumping) {
+            yVelocity = 0.0f;
+            AlreadyJumped = false;
+            yWalk = 1.0f;
+        }
+    } else {
+        if (yWalk < 0.0f) {
+            yVelocity = 0.0f;
+            AlreadyJumped = false;    
+            yWalk = 0.0f;
+        }
+    }*/
+    
+    yWalk += yVelocity * deltaTime;
+
 
         // sould do walk anim?
         if(ismoving)
             animator.UpdateAnimation(deltaTime);
+
 
 
         // render
@@ -208,12 +366,14 @@ int main()
 
         shaderAnim.use();
 
+
         // view and projection
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), 
             (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         shaderAnim.setMat4("projection", projection);
         shaderAnim.setMat4("view", view);
+
 
         // Animator + bones
         auto transforms = animator.GetFinalBoneMatrices();
@@ -227,10 +387,13 @@ int main()
         model = glm::scale(model, glm::vec3(0.005f, 0.005f, 0.005f));
         model = glm::rotate(model, glm::radians(Rotate), glm::vec3(0.0f, 1.0f, 0.0f));
        
+
         shaderAnim.setMat4("model", model);
         Man.Draw(shaderAnim);
 
-        shader.use();
+
+        /*shader.use();
+
 
         // view and projection
         projection = glm::perspective(glm::radians(camera.Zoom), 
@@ -239,29 +402,37 @@ int main()
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
 
+
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
         model = glm::translate(model, glm::vec3(10.0f, 0.0f, 9.0f)); 
 
+
         shader.setMat4("model", model);
-        Tree.Draw(shader);
+        Tree.Draw(shader);*/
+
 
         cubeShader.use();
+
 
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
         cubeShader.setMat4("projection", projection);
         cubeShader.setMat4("view", view);
 
+
         // world transformation
         model = glm::mat4(1.0f);
         cubeShader.setMat4("model", model);
+
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, CubeTex0);
 
+
         cubeShader.use();
+
 
         // Draw cube enviroment
         DrawCube(model, glm::vec3(1.35f, 1.6f, 0.0f), cubeShader, cubeVAO);
@@ -271,19 +442,24 @@ int main()
         DrawCube(model, glm::vec3(-1.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
         DrawCube(model, glm::vec3(0.0f, 0.6f, 1.0f), cubeShader, cubeVAO);
 
+
         model = glm::mat4(1.0f);
         cubeShader.setMat4("model", model);
+
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, PlaneTex0);
 
+
         glBindVertexArray(planeVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
 
         // render plane
         //model = glm::mat4(1.0f);
         //PlaneMesh.Draw(cubeShader);
+
 
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
@@ -291,6 +467,8 @@ int main()
         view = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
         skyboxShader.setMat4("view", view);
         skyboxShader.setMat4("projection", projection);
+
+
         // skybox cube
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -299,15 +477,18 @@ int main()
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
+
     }
 
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     glfwTerminate();
     return 0;
+
 }
 
 // Load texture

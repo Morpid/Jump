@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Mesh.h"
 #include <glm/glm.hpp>
+#include <glfw/glfw3.h>
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -255,7 +256,7 @@ glm::vec2 ProcessInput(GLFWwindow* window, glm::vec2 direction)
 
     return direction;
 }
-void CheckRotation(glm::vec2 direction)
+void CharRotation(glm::vec2 direction)
 {
     // Step 2. Figure out rotation of model
         if (glm::length(direction) > 0.0f) 
@@ -289,7 +290,7 @@ void CheckRotation(glm::vec2 direction)
             Rotate = glm::degrees(needed_rotation);
     }
 }
-void CheckJumping()
+/*void CheckJumping()
 {
     // Step 3. Sort out jumping
     if(jumpLength > 10)
@@ -302,16 +303,229 @@ void CheckJumping()
     }
     // Apply gravity with Euler integration
     yVelocity += yGravity * deltaTime;
-}
+}*/
 
 float PlaneVertices[] = {
     // positions          // texture coords
-     5.f,  -0.f, 5.f,   1.0f, 1.0f, // top right
-     5.f, -0.f, -5.f,   1.0f, 0.0f, // bottom right
-    -5.f, -0.f, -5.f,   0.0f, 0.0f, // bottom left
-    -5.f,  -0.f, 5.f,   0.0f, 1.0f  // top left 
+     1055.f,  -0.f, 1055.f,   1.0f, 1.0f, // top right
+     1055.f, -0.f, -1055.f,   1.0f, 0.0f, // bottom right
+    -1055.f, -0.f, -1055.f,   0.0f, 0.0f, // bottom left
+    -1055.f,  -0.f, 1055.f,   0.0f, 1.0f  // top left 
 };
 unsigned int PlaneIndices[] = {
    0, 1, 3, // first triangle
    1, 2, 3  // second triangle
 };
+
+class Object
+{
+
+    public:
+        glm::vec3 cords;
+        float x = cords[0];
+        float y = cords[1];
+        float z = cords[2];
+        float HalfOfX, HalfOfZ, Height;
+        bool XCol;
+        bool ZCol;
+        bool YCol;
+
+
+        void CheckCollisionXZ(float CharX, float CharY, float CharZ)
+        {
+
+            x = cords[0];
+            y = cords[1];
+            z = cords[2];
+
+
+            XCol = false;
+            ZCol = false;
+            float HalfOfHeight = Height / 2;
+            float top = y + HalfOfHeight;
+
+
+            float xl, xh, zl, zh;
+
+
+            xl = x - HalfOfX;
+            xh = x + HalfOfX;
+            zl = z - HalfOfZ;
+            zh = z + HalfOfZ;
+
+
+            if(CharY < top)
+            {
+
+                if(CharX < xh && CharX > xl)
+                    XCol = true;
+                if(CharZ < zh && CharZ > zl)
+                    ZCol = true;
+
+            }
+
+        }
+
+
+};
+
+
+class Cube
+{
+    public:
+        glm::vec3 cords;
+        float Width;
+        float x = cords[0];
+        float y = cords[1];
+        float z = cords[2];
+        bool XZCol;
+        bool YCol;
+        int Level;
+
+
+        void CheckCollisionXZ(float CharX, float CharY, float CharZ)
+        {
+
+
+            x = cords[0];
+            y = cords[1];
+            z = cords[2];
+
+
+            XZCol = false;
+
+
+            float HalfOfCubeWidth = Width / 2;
+            float HalfOfCubeHeight = Width / 2;
+
+
+            float top = y + HalfOfCubeHeight;
+
+
+            float xl, xh, zl, zh;
+
+
+            xl = x - HalfOfCubeWidth;
+            xh = x + HalfOfCubeWidth;
+            zl = z - HalfOfCubeWidth;
+            zh = z + HalfOfCubeWidth;
+
+
+            if(CharY < top)
+            {
+
+                if(CharX < xh && CharX > xl && CharZ < zh && CharZ > zl)
+                    XZCol = true;
+
+            }
+
+
+            if(Level == 1)
+            {
+                if (CharY < 1.0f && XZCol)
+                {
+                    xWalk = LastWalkx;
+                    zWalk = LastWalkz;
+                    XZCol = false;
+                }
+
+                if (XZCol) 
+                {
+                    if (CharY <= 1.07f && !isjumping) {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;
+                        yWalk = 1.0f;
+                    }
+                } 
+                else 
+                {
+                    if (CharY < 0.0f) {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;    
+                        yWalk = 0.0f;
+                    }
+                }
+            }
+
+            if(Level == 2)
+            {
+                if (CharY > 0.97f && CharY < 2.0f && XZCol)
+                {
+                    xWalk = LastWalkx;
+                    zWalk = LastWalkz;
+                    XZCol = false;
+                }
+                if(XZCol)
+                {
+                    if (CharY <= 2.07f && CharY > 1.0f && !isjumping) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;
+                        yWalk = 2.0f;
+                    }
+                }
+                else
+                {
+                    if (CharY < 0.0f) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;    
+                        yWalk = 0.0f;
+                    }
+                }
+            }
+
+        }
+
+
+};
+
+    //if (Cube11.XZCol == true || Cube12.XZCol == true || Cube13.XZCol == true || Cube14.XZCol == true || Cube15.XZCol == true)
+    //    within1stLevelBoxBounds = true;
+    //if(Cube21.XZCol == true)
+    //    within2ndLevelBoxBounds = true;
+
+    // Check for collision
+    //if (yWalk < 1.0f) {
+    //    if (within1stLevelBoxBounds) {
+    //        xWalk = LastWalkx;
+    //        zWalk = LastWalkz;
+    //        within1stLevelBoxBounds = false;
+    //    }
+    //}
+    //if (yWalk > 0.97f && yWalk < 2.0f && within2ndLevelBoxBounds)
+    //{
+    //    xWalk = LastWalkx;
+    //    zWalk = LastWalkz;
+    //    within2ndLevelBoxBounds = false;
+    //}
+    //if (within2ndLevelBoxBounds) {
+    //    if (yWalk <= 2.07f && yWalk > 1.0f && !isjumping) {
+    //        yVelocity = 0.0f;
+    //        AlreadyJumped = false;
+    //        yWalk = 2.0f;
+    //    }
+    //} else {
+    //    if (yWalk < 0.0f) {
+    //        yVelocity = 0.0f;
+    //        AlreadyJumped = false;    
+    //        yWalk = 0.0f;
+    //    }
+    //}
+    
+    // Check floor height
+    //if (within1stLevelBoxBounds) {
+    //    if (yWalk <= 1.07f && !isjumping) {
+    //        yVelocity = 0.0f;
+    //        AlreadyJumped = false;
+    //        yWalk = 1.0f;
+    //    }
+    //} else {
+    //    if (yWalk < 0.0f) {
+    //        yVelocity = 0.0f;
+    //        AlreadyJumped = false;    
+    //        yWalk = 0.0f;
+    //    }
+    //}
+    
+    //yWalk += yVelocity * deltaTime;
