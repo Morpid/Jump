@@ -100,6 +100,16 @@ int main()
     Cube Cube15;
     Cube Cube21;
     Cube Cube16;
+    Cube Cube31;
+    Cube Cube41;
+    Cube Cube51;
+    Cube Cube61;
+    Cube Cube71;
+    Cube Cube72;
+    Cube Cube73;
+    Cube Cube74;
+    Cube Cube75;
+    Cube Cube76;
     
     Cube11.cords = glm::vec3(0.0f, 0.6f, 0.0f);
     Cube12.cords = glm::vec3(1.0f, 0.6f, 1.0f);
@@ -108,6 +118,16 @@ int main()
     Cube15.cords = glm::vec3(0.0f, 0.6f, 1.0f);
     Cube21.cords = glm::vec3(1.35f, 1.6f, 0.0f);
     Cube16.cords = glm::vec3(5.0f, 0.6f, 2.1f);
+    Cube31.cords = glm::vec3(2.35f, 2.6f, 0.0f);
+    Cube41.cords = glm::vec3(3.35f, 3.6f, 0.0f);
+    Cube51.cords = glm::vec3(4.50f, 4.6f, 0.0f);
+    Cube61.cords = glm::vec3(6.0f, 5.6f, 0.0f);
+    Cube71.cords = glm::vec3(7.0f, 6.6f, 1.0f);
+    Cube72.cords = glm::vec3(7.0f, 6.6f, 0.0f);
+    Cube73.cords = glm::vec3(7.0f, 6.6f, -1.0f);
+    Cube74.cords = glm::vec3(8.0f, 6.6f, 1.0f);
+    Cube76.cords = glm::vec3(8.0f, 6.6f, 0.0f);
+    Cube75.cords = glm::vec3(8.0f, 6.6f, -1.0f);
 
     Cube11.Width = 1.0f;
     Cube12.Width = 1.0f;
@@ -116,6 +136,16 @@ int main()
     Cube15.Width = 1.0f;
     Cube21.Width = 1.0f;
     Cube16.Width = 1.0f;
+    Cube31.Width = 1.0f;
+    Cube41.Width = 1.0f;
+    Cube51.Width = 1.0f;
+    Cube61.Width = 1.0f;
+    Cube71.Width = 1.0f;
+    Cube72.Width = 1.0f;
+    Cube73.Width = 1.0f;
+    Cube74.Width = 1.0f;
+    Cube75.Width = 1.0f;
+    Cube76.Width = 1.0f;
 
     Cube11.Level = 1;
     Cube12.Level = 1;
@@ -124,6 +154,16 @@ int main()
     Cube15.Level = 1;
     Cube21.Level = 2;
     Cube16.Level = 1;
+    Cube31.Level = 3;
+    Cube41.Level = 4;
+    Cube51.Level = 5;
+    Cube61.Level = 6;
+    Cube71.Level = 7;
+    Cube72.Level = 7;
+    Cube73.Level = 7;
+    Cube74.Level = 7;
+    Cube75.Level = 7;
+    Cube76.Level = 7;
 
     // Plane VBO, VAO, EBO
     unsigned int planeVBO, planeVAO, planeEBO;
@@ -200,7 +240,10 @@ int main()
 
     // cube tex
     unsigned int CubeTex0 = loadTexture("CubeTexs/container2.png");
-    unsigned int CubeTex1 = loadTexture("CubeTexs/container2_specular.png");
+    unsigned int CubeTex1 = loadTexture("CubeTexs/bllack.jpeg");
+    unsigned int CubeTex2 = loadTexture("CubeTexs/container.jpeg");
+    unsigned int CubeTex3 = loadTexture("CubeTexs/PlaneTex.jpeg");
+    unsigned int CubeTexBlackSpecular = loadTexture("CubeTexs/blllack.jpeg");
     unsigned int PlaneTex0 = loadTexture("CubeTexs/PlaneTex.jpeg");
 
     skyboxShader.use();
@@ -223,7 +266,7 @@ int main()
         lastFrame = currentFrame;
 
         // input
-        CameraCords = glm::vec3(xWalk, yWalk + 2.4f, zWalk + 3.0f);
+        CameraCords = glm::vec3(xWalk, yWalk + 3.4f, zWalk + 4.0f);
         camera.ProcessKeyboardFollow(FOLLOW, deltaTime, CameraCords);
 
         // Collision detection cords
@@ -262,6 +305,17 @@ int main()
         Cube15.CheckCollision(xWalk, yWalk, zWalk);
         Cube21.CheckCollision(xWalk, yWalk, zWalk);
         Cube16.CheckCollision(xWalk, yWalk, zWalk);
+        Cube31.CheckCollision(xWalk, yWalk, zWalk);
+        Cube41.CheckCollision(xWalk, yWalk, zWalk);
+        Cube51.CheckCollision(xWalk, yWalk, zWalk);
+        Cube61.CheckCollision(xWalk, yWalk, zWalk);
+        Cube71.CheckCollision(xWalk, yWalk, zWalk);
+        Cube72.CheckCollision(xWalk, yWalk, zWalk);
+        Cube73.CheckCollision(xWalk, yWalk, zWalk);
+        Cube74.CheckCollision(xWalk, yWalk, zWalk);
+        Cube75.CheckCollision(xWalk, yWalk, zWalk);
+        Cube76.CheckCollision(xWalk, yWalk, zWalk);
+
 
         yWalk += yVelocity * deltaTime;
 
@@ -340,10 +394,10 @@ int main()
         // light properties
         cubeShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
         cubeShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-        cubeShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+        cubeShader.setVec3("light.specular", 3.0f, 3.0f, 3.0f);
 
         // material properties
-        cubeShader.setFloat("material.shininess", 64.0f);
+        cubeShader.setFloat("material.shininess", 3.0f);
 
         // view/projection transformations
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -357,25 +411,40 @@ int main()
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, CubeTex0);
+        glBindTexture(GL_TEXTURE_2D, CubeTex2);
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, CubeTex1);
+        glBindTexture(GL_TEXTURE_2D, CubeTex2);
 
         // Draw cube enviroment
-        DrawCube(model, glm::vec3(1.35f, 1.6f, 0.0f), cubeShader, CubeVAO);
-        DrawCube(model, glm::vec3(0.0f, 0.6f, 0.0f), cubeShader, CubeVAO);
-        DrawCube(model, glm::vec3(1.0f, 0.6f, 1.0f), cubeShader, CubeVAO);
-        DrawCube(model, glm::vec3(1.0f, 0.6f, 0.0f), cubeShader, CubeVAO);
-        DrawCube(model, glm::vec3(-1.0f, 0.6f, 0.0f), cubeShader, CubeVAO);
-        DrawCube(model, glm::vec3(0.0f, 0.6f, 1.0f), cubeShader, CubeVAO);
-        DrawCube(model, glm::vec3(5.0f, 0.6f, 2.1f), cubeShader, CubeVAO);
+        DrawCube(model, CubePos[0] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[1] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[2] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[3] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[4] ,cubeShader, CubeVAO);
+
+        DrawCube(model, CubePos[5] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[6] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[7] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[8] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[9] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[10] ,cubeShader, CubeVAO);
+
+        DrawCube(model, CubePos[11] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[12] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[13] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[14] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[15] ,cubeShader, CubeVAO);
+        DrawCube(model, CubePos[16] ,cubeShader, CubeVAO);
 
         model = glm::mat4(1.0f);
         cubeShader.setMat4("model", model);
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, PlaneTex0);
+        // bind specular map
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, PlaneTex0);
 
         glBindVertexArray(planeVAO);
@@ -387,7 +456,7 @@ int main()
         LightShader.setMat4("view", view);
         model = glm::mat4(1.0f);
         model = glm::translate(model, LightPos);
-        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        model = glm::scale(model, glm::vec3(1.0f)); // a smaller cube
         LightShader.setMat4("model", model);
 
         glBindVertexArray(CubeVAO);

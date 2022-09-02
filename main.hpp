@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glfw/glfw3.h>
 
-glm::vec3 LightPos = glm::vec3(15.0f, 7.0f, 5.0f);
+glm::vec3 LightPos = glm::vec3(25.0f, 17.0f, 5.0f);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -478,6 +478,146 @@ class Cube
                 }
             }
 
+            if(Level == 3)
+            {
+                if (CharY > 1.97f && CharY < 3.0f && XZCol)
+                {
+                    xWalk = LastWalkx;
+                    zWalk = LastWalkz;
+                    XZCol = false;
+                }
+                if(XZCol)
+                {
+                    if (CharY <= 3.07f && CharY > 2.0f && !isjumping) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;
+                        yWalk = 3.0f;
+                    }
+                }
+                else
+                {
+                    if (CharY < 0.0f) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;    
+                        yWalk = 0.0f;
+                    }
+                }
+            }
+
+            if(Level == 4)
+            {
+                if (CharY > 2.97f && CharY < 4.0f && XZCol)
+                {
+                    xWalk = LastWalkx;
+                    zWalk = LastWalkz;
+                    XZCol = false;
+                }
+                if(XZCol)
+                {
+                    if (CharY <= 4.07f && CharY > 3.0f && !isjumping) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;
+                        yWalk = 4.0f;
+                    }
+                }
+                else
+                {
+                    if (CharY < 0.0f) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;    
+                        yWalk = 0.0f;
+                    }
+                }
+            }
+
+            if(Level == 5)
+            {
+                if (CharY > 3.97f && CharY < 5.0f && XZCol)
+                {
+                    xWalk = LastWalkx;
+                    zWalk = LastWalkz;
+                    XZCol = false;
+                }
+                if(XZCol)
+                {
+                    if (CharY <= 5.07f && CharY > 4.0f && !isjumping) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;
+                        yWalk = 5.0f;
+                    }
+                }
+                else
+                {
+                    if (CharY < 0.0f) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;    
+                        yWalk = 0.0f;
+                    }
+                }
+            }
+
+            if(Level == 6)
+            {
+                if (CharY > 4.97f && CharY < 6.0f && XZCol)
+                {
+                    xWalk = LastWalkx;
+                    zWalk = LastWalkz;
+                    XZCol = false;
+                }
+                if(XZCol)
+                {
+                    if (CharY <= 6.07f && CharY > 5.0f && !isjumping) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;
+                        yWalk = 6.0f;
+                    }
+                }
+                else
+                {
+                    if (CharY < 0.0f) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;    
+                        yWalk = 0.0f;
+                    }
+                }
+            }
+
+            if(Level == 7)
+            {
+                if (CharY > 5.97f && CharY < 7.0f && XZCol)
+                {
+                    xWalk = LastWalkx;
+                    zWalk = LastWalkz;
+                    XZCol = false;
+                }
+                if(XZCol)
+                {
+                    if (CharY <= 7.07f && CharY > 6.0f && !isjumping) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;
+                        yWalk = 7.0f;
+                    }
+                }
+                else
+                {
+                    if (CharY < 0.0f) 
+                    {
+                        yVelocity = 0.0f;
+                        AlreadyJumped = false;    
+                        yWalk = 0.0f;
+                    }
+                }
+            }
+
         }
 
 
@@ -532,3 +672,25 @@ class Cube
     //}
     
     //yWalk += yVelocity * deltaTime;
+
+glm::vec3 CubePos[] =
+{
+    glm::vec3(0.0f, 0.6f, 0.0f),
+    glm::vec3(1.0f, 0.6f, 1.0f),
+    glm::vec3(1.0f, 0.6f, 0.0f),
+    glm::vec3(-1.0f, 0.6f, 0.0f),
+    glm::vec3(0.0f, 0.6f, 1.0f),
+    glm::vec3(5.0f, 0.6f, 2.1f),
+    glm::vec3(1.35f, 1.6f, 0.0f),
+    glm::vec3(2.35f, 2.6f, 0.0f),
+    glm::vec3(3.35f, 3.6f, 0.0f),
+    glm::vec3(4.50f, 4.6f, 0.0f),
+    glm::vec3(6.0f, 5.6f, 0.0f),
+
+    glm::vec3(7.0f, 6.6f, 1.0f),
+    glm::vec3(7.0f, 6.6f, 0.0f),
+    glm::vec3(7.0f, 6.6f, -1.0f),
+    glm::vec3(8.0f, 6.6f, 1.0f),
+    glm::vec3(8.0f, 6.6f, 0.0f),
+    glm::vec3(8.0f, 6.6f, -1.0f)
+};
