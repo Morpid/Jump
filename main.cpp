@@ -91,7 +91,6 @@ int main()
     ModelAnim Man("models/Man/Mr_Man_Walking.fbx", true);
     Animation ManAnimation("models/Man/Mr_Man_Walking.fbx", &Man);
     Animator animator(&ManAnimation);
-    std::string PlaneType = "texture_diffuse";
 
     Cube Cube11;
     Cube Cube12;
@@ -212,7 +211,7 @@ int main()
     unsigned int cubemapTexture = loadCubemap(faces);
     stbi_set_flip_vertically_on_load(true);
 
-// first, configure the cube's VAO (and VBO)
+    // first, configure the cube's VAO (and VBO)
     unsigned int CubeVBO, CubeVAO;
     glGenVertexArrays(1, &CubeVAO);
     glGenBuffers(1, &CubeVBO);
@@ -316,7 +315,6 @@ int main()
         Cube75.CheckCollision(xWalk, yWalk, zWalk);
         Cube76.CheckCollision(xWalk, yWalk, zWalk);
 
-
         yWalk += yVelocity * deltaTime;
 
         // sould do walk anim?
@@ -366,26 +364,6 @@ int main()
         shader.setMat4("model", model);
         Tree.Draw(shader);*/
 
-        // view/projection transformations
-        //projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        //view = camera.GetViewMatrix();
-        //cubeShader.setMat4("projection", projection);
-        //cubeShader.setMat4("view", view);
-
-
-        // world transformation
-        //model = glm::mat4(1.0f);
-        //cubeShader.setMat4("model", model);
-
-        //projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        //view = camera.GetViewMatrix();
-        //cubeShader.setMat4("projection", projection);
-        //cubeShader.setMat4("view", view);
-
-        // world transformation
-        //model = glm::mat4(1.0f);
-        //cubeShader.setMat4("model", model);
-
         // be sure to activate shader when setting uniforms/drawing objects
         cubeShader.use();
         cubeShader.setVec3("light.position", LightPos);
@@ -397,17 +375,13 @@ int main()
         cubeShader.setVec3("light.specular", 3.0f, 3.0f, 3.0f);
 
         // material properties
-        cubeShader.setFloat("material.shininess", 3.0f);
+        cubeShader.setFloat("material.shininess", 5.0f);
 
         // view/projection transformations
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
         cubeShader.setMat4("projection", projection);
         cubeShader.setMat4("view", view);
-
-        // world transformation
-        model = glm::mat4(1.0f);
-        cubeShader.setMat4("model", model);
 
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
@@ -440,6 +414,9 @@ int main()
         model = glm::mat4(1.0f);
         cubeShader.setMat4("model", model);
 
+        cubeShader.setVec3("light.specular", 0.05f, 0.05f, 0.05f);
+
+
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, PlaneTex0);
@@ -461,10 +438,6 @@ int main()
 
         glBindVertexArray(CubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        // render plane
-        //model = glm::mat4(1.0f);
-        //PlaneMesh.Draw(cubeShader);
 
         // draw skybox as last
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
