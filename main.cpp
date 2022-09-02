@@ -85,6 +85,7 @@ int main()
     Shader shaderAnim("shaders/shaderAnim.vs", "shaders/shader.fs");
     Shader shader("shaders/shader.vs", "shaders/shader.fs");
     Shader cubeShader("shaders/cube.vs", "shaders/cube.fs");
+    Shader LightShader("shaders/light.vs", "shaders/light.fs");
     stbi_set_flip_vertically_on_load(true);
     //Model Tree("models/Tree2/tree01.obj");
     ModelAnim Man("models/Man/Mr_Man_Walking.fbx", true);
@@ -171,34 +172,44 @@ int main()
     unsigned int cubemapTexture = loadCubemap(faces);
     stbi_set_flip_vertically_on_load(true);
 
-    // VAO + VBO for cube
-    unsigned int cubeVBO, cubeVAO;
-    glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &cubeVBO);
+// first, configure the cube's VAO (and VBO)
+    unsigned int CubeVBO, CubeVAO;
+    glGenVertexArrays(1, &CubeVAO);
+    glGenBuffers(1, &CubeVBO);
 
-    glBindVertexArray(cubeVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertices), CubeVertices, GL_STATIC_DRAW);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glBindVertexArray(CubeVAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    // texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, CubeVBO);
+    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
     // cube tex
-    unsigned int CubeTex0 = loadCubeTexture("CubeTexs/container.jpeg");
-    unsigned int PlaneTex0 = loadCubeTexture("CubeTexs/PlaneTex.jpeg");
-
-    // set int (shaders)
-    cubeShader.use();
-    cubeShader.setInt("texture1", 0);
+    unsigned int CubeTex0 = loadTexture("CubeTexs/container2.png");
+    unsigned int CubeTex1 = loadTexture("CubeTexs/container2_specular.png");
+    unsigned int PlaneTex0 = loadTexture("CubeTexs/PlaneTex.jpeg");
 
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
+    // shader configuration
+    cubeShader.use();
+    cubeShader.setInt("material.diffuse", 0);
+    cubeShader.setInt("material.specular", 1);
     // Update anim
     animator.UpdateAnimation(0.0f);
 
@@ -244,13 +255,13 @@ int main()
         within1stLevelBoxBounds = false;
         within2ndLevelBoxBounds = false;
 
-        Cube11.CheckCollisionXZ(xWalk, yWalk, zWalk);
-        Cube12.CheckCollisionXZ(xWalk, yWalk, zWalk);
-        Cube13.CheckCollisionXZ(xWalk, yWalk, zWalk);
-        Cube14.CheckCollisionXZ(xWalk, yWalk, zWalk);
-        Cube15.CheckCollisionXZ(xWalk, yWalk, zWalk);
-        Cube21.CheckCollisionXZ(xWalk, yWalk, zWalk);
-        Cube16.CheckCollisionXZ(xWalk, yWalk, zWalk);
+        Cube11.CheckCollision(xWalk, yWalk, zWalk);
+        Cube12.CheckCollision(xWalk, yWalk, zWalk);
+        Cube13.CheckCollision(xWalk, yWalk, zWalk);
+        Cube14.CheckCollision(xWalk, yWalk, zWalk);
+        Cube15.CheckCollision(xWalk, yWalk, zWalk);
+        Cube21.CheckCollision(xWalk, yWalk, zWalk);
+        Cube16.CheckCollision(xWalk, yWalk, zWalk);
 
         yWalk += yVelocity * deltaTime;
 
@@ -301,8 +312,40 @@ int main()
         shader.setMat4("model", model);
         Tree.Draw(shader);*/
 
-        cubeShader.use();
+        // view/projection transformations
+        //projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        //view = camera.GetViewMatrix();
+        //cubeShader.setMat4("projection", projection);
+        //cubeShader.setMat4("view", view);
 
+
+        // world transformation
+        //model = glm::mat4(1.0f);
+        //cubeShader.setMat4("model", model);
+
+        //projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        //view = camera.GetViewMatrix();
+        //cubeShader.setMat4("projection", projection);
+        //cubeShader.setMat4("view", view);
+
+        // world transformation
+        //model = glm::mat4(1.0f);
+        //cubeShader.setMat4("model", model);
+
+        // be sure to activate shader when setting uniforms/drawing objects
+        cubeShader.use();
+        cubeShader.setVec3("light.position", LightPos);
+        cubeShader.setVec3("viewPos", camera.Position);
+
+        // light properties
+        cubeShader.setVec3("light.ambient", 0.5f, 0.5f, 0.5f);
+        cubeShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+        cubeShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+        // material properties
+        cubeShader.setFloat("material.shininess", 64.0f);
+
+        // view/projection transformations
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
         cubeShader.setMat4("projection", projection);
@@ -316,16 +359,17 @@ int main()
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, CubeTex0);
 
-        cubeShader.use();
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, CubeTex1);
 
         // Draw cube enviroment
-        DrawCube(model, glm::vec3(1.35f, 1.6f, 0.0f), cubeShader, cubeVAO);
-        DrawCube(model, glm::vec3(0.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
-        DrawCube(model, glm::vec3(1.0f, 0.6f, 1.0f), cubeShader, cubeVAO);
-        DrawCube(model, glm::vec3(1.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
-        DrawCube(model, glm::vec3(-1.0f, 0.6f, 0.0f), cubeShader, cubeVAO);
-        DrawCube(model, glm::vec3(0.0f, 0.6f, 1.0f), cubeShader, cubeVAO);
-        DrawCube(model, glm::vec3(5.0f, 0.6f, 2.1f), cubeShader, cubeVAO);
+        DrawCube(model, glm::vec3(1.35f, 1.6f, 0.0f), cubeShader, CubeVAO);
+        DrawCube(model, glm::vec3(0.0f, 0.6f, 0.0f), cubeShader, CubeVAO);
+        DrawCube(model, glm::vec3(1.0f, 0.6f, 1.0f), cubeShader, CubeVAO);
+        DrawCube(model, glm::vec3(1.0f, 0.6f, 0.0f), cubeShader, CubeVAO);
+        DrawCube(model, glm::vec3(-1.0f, 0.6f, 0.0f), cubeShader, CubeVAO);
+        DrawCube(model, glm::vec3(0.0f, 0.6f, 1.0f), cubeShader, CubeVAO);
+        DrawCube(model, glm::vec3(5.0f, 0.6f, 2.1f), cubeShader, CubeVAO);
 
         model = glm::mat4(1.0f);
         cubeShader.setMat4("model", model);
@@ -336,6 +380,18 @@ int main()
 
         glBindVertexArray(planeVAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // also draw the lamp object
+        LightShader.use();
+        LightShader.setMat4("projection", projection);
+        LightShader.setMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, LightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        LightShader.setMat4("model", model);
+
+        glBindVertexArray(CubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // render plane
         //model = glm::mat4(1.0f);
